@@ -1,2 +1,2 @@
 # TODO: implement a config system or smt
-CHUNK_SIZE = 65536 # 2 ^ 16 bytes
+CHUNK_SIZE = 1024  # 2 ^ 10 bytes
