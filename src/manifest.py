@@ -1,20 +1,21 @@
 from dataclasses import dataclass
 from config import CHUNK_SIZE
+from dataclasses import asdict
+from pathlib import Path
+import json
 
 
-@dataclass
+@dataclass(frozen=True)
 class ChunkInfo:
     id: str
     size: int
 
 
-@dataclass
+@dataclass(frozen=True)
 class FileInfo:
     path: str
     size: int
-    chunks: list[
-        str
-    ]  # may change to list[ChunkInfo] if i decide to make each chunk size different
+    chunks: list[ChunkInfo]
 
 
 """
@@ -23,34 +24,42 @@ Manifest Format
 
 manifest.json
 
-version: ...
-c_size: ...
+format_version: ...
+chunk_size: ...
 files: {
-    x: [start, end]
+    path: ...
+    size: 
+    sha256: 
+    chunks: [
+    {
+        chunk_hash:
+        size: 
+    }
+    ]
 }
 
 
 """
 
 
+@dataclass(frozen=True)
 class Manifest:
-    def __init__(self, files_path) -> None:
-        data: bytes = b""
-        chunk = 0
-        file_map = {}
-        for path in files_path:
-            start = chunk
-            with open(path, mode="rb+") as file:
-                data += file.read()
-                index = 0
-                while index < len(data):
-                    chunk += 1
-                    index += CHUNK_SIZE
-            file_map[path] = (start, chunk + 1)
+    format_version: int
+    chunk_size: int
+    files: list[FileInfo]
 
-        self.data = data
-        self.num_chunks = chunk
-        self.file_map = file_map
+    def to_dict(self) -> dict:
+        return asdict(self)
 
-    def generate_manifest(self):
-        pass
+    def save(self, path: Path) -> None:
+        path.parent.mkdir(parents=True, exist_ok=True)
+
+        with path.open("w", encoding="utf-8") as file:
+            json.dump(
+                self.to_dict(),
+                file,
+                indent=4,
+                sort_keys=True,
+            )
+
+        file.write("\n")

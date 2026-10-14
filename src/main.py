@@ -1,6 +1,7 @@
 import argparse
 import os
-from chunker import chunk
+
+# from chunker import chunk
 
 parser = argparse.ArgumentParser()
 
@@ -20,7 +21,7 @@ def pack(args):
     p = os.path.join(cwd, args.path)
     d = os.path.join(cwd, args.dest)
     files = get_files(p)
-    chunks = chunk(files)
+    # chunks = chunk(files)
 
 
 def get_args():
