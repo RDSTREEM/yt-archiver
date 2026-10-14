@@ -2,6 +2,7 @@ from pathlib import Path
 from config import CHUNK_SIZE
 from manifest import Manifest, FileInfo, ChunkInfo
 from chunker import chunk_stream
+import hashlib
 
 
 def pack_directory(source: Path, dest: Path, chunk_size: int = CHUNK_SIZE) -> Manifest:
@@ -32,17 +33,17 @@ def pack_directory(source: Path, dest: Path, chunk_size: int = CHUNK_SIZE) -> Ma
 
     for path in paths:
         relative_path = path.relative_to(source)
+        file_hash = hashlib.sha256()
         file_size = 0
         chunks: list[ChunkInfo] = []
 
         with path.open("rb") as stream:
-            i = 0
             for data in chunk_stream(stream, chunk_size):
-                chunk_path = chunk_dir / relative_path / str(i)
+                chunk_hash = hashlib.sha256(data).hexdigest()
+                chunk_path = chunk_dir / chunk_hash
 
+                file_hash.update(data)
                 file_size += len(data)
-
-                i += 1
 
     man = Manifest(format_version=1, chunk_size=chunk_size, files=files)
 
