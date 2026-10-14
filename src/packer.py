@@ -17,13 +17,19 @@ def pack_directory(source: Path, dest: Path, chunk_size: int = CHUNK_SIZE) -> Ma
     if dest == source or source in dest.parents:
         raise ValueError("Destination must be outside of the source directory")
 
-    manifest = dest / "manifest.json"
+    manifest_path = dest / "manifest.json"
 
-    if manifest.exists():
+    if manifest_path.exists():
         raise FileExistsError("A manifest file already exists, cant overwrite")
 
-    # assuming we have all the paths
-    paths: list[Path] = []
+    paths: list[Path] = sorted(
+        (
+            path
+            for path in source.rglob("*")
+            if path.is_file() and not path.is_symlink()
+        ),
+        key=lambda path: path.relative_to(source).as_posix(),
+    )
 
     chunk_dir = dest / "chunks"
 
@@ -45,6 +51,32 @@ def pack_directory(source: Path, dest: Path, chunk_size: int = CHUNK_SIZE) -> Ma
                 file_hash.update(data)
                 file_size += len(data)
 
-    man = Manifest(format_version=1, chunk_size=chunk_size, files=files)
+                if not chunk_path.exists():
+                    with chunk_path.open("xb") as chunk_file:
+                        chunk_file.write(data)
 
-    return man
+                chunks.append(
+                    ChunkInfo(
+                        id=chunk_hash,
+                        size=len(data),
+                    )
+                )
+
+        files.append(
+            FileInfo(
+                path=relative_path,
+                size=file_size,
+                sha256=file_hash.hexdigest(),
+                chunks=chunks,
+            )
+        )
+
+    manifest = Manifest(
+        format_version=1,
+        chunk_size=chunk_size,
+        files=files,
+    )
+
+    manifest.save(manifest_path)
+
+    return manifest
