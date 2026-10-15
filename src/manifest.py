@@ -69,3 +69,34 @@ class Manifest:
             file.write("\n")
         finally:
             temp_path.unlink(missing_ok=True)
+
+    @classmethod
+    def load(cls, path) -> "Manifest":
+        with path.open("r", encoding="utf-8") as file:
+            data = json.load(file)
+
+        if type(data) != dict:
+            raise ValueError("Manifest should be a json file")
+
+        version = data.get("format_version")
+        chunk_size = data.get("chunk_size")
+        raw_files = data.get("files")
+
+        if type(version) is not int or version != 1:
+            raise ValueError("Unsupported version")
+
+        if type(chunk_size) is not int or chunk_size <= 0:
+            raise ValueError("Unsupported chunk size")
+
+        if not isinstance(raw_files, list):
+            raise ValueError("'files' must be a list")
+
+        for file in raw_files:
+            if not isinstance(file, dict):
+                raise ValueError("EAch file entry must be an object")
+
+        return cls(
+            format_version=version,
+            chunk_size=chunk_size,
+            files=raw_files,
+        )
