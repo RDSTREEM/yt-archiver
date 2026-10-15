@@ -7,10 +7,18 @@ from packer import pack_directory
 
 def handle_pack(args) -> None:
     manifest = pack_directory(
-        source=args.path,
+        source=args.src,
         dest=args.dest,
         chunk_size=args.chunk_size,
     )
+
+    total_bytes = sum(file.size for file in manifest.files)
+    total_chunks = sum(len(file.chunks) for file in manifest.files)
+    print("Archive created successfully.")
+    print(f"Files: {len(manifest.files)}")
+    print(f"Total source bytes: {total_bytes}")
+    print(f"Chunk references: {total_chunks}")
+    print(f"Archive: {Path(args.dest).resolve()}")
 
 
 def main() -> None:
