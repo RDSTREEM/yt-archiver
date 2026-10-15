@@ -1,8 +1,9 @@
 from dataclasses import dataclass
 from config import CHUNK_SIZE
 from dataclasses import asdict
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import json
+import re
 
 
 @dataclass(frozen=True)
@@ -91,9 +92,59 @@ class Manifest:
         if not isinstance(raw_files, list):
             raise ValueError("'files' must be a list")
 
+        files = []
+        seen_paths = set()  # bahahaha using what i learned in ac, dfs lets gooo
+
         for file in raw_files:
             if not isinstance(file, dict):
                 raise ValueError("EAch file entry must be an object")
+
+            relative_path = file.get("path")
+            size = file.get("size")
+            sha256 = file.get("sha256")
+            raw_chunks = file.get("chunks")
+
+            if not isinstance(relative_path, str) or not relative_path:
+                raise ValueError("Invalid file path")
+
+            if "\\" in relative_path or "\x00" in relative_path:
+                raise ValueError("Unsafe path")
+
+            path = PurePosixPath(relative_path)
+
+            if (
+                path.is_absolute()
+                or any(part in ("", ".", "..") for part in relative_path.split("/"))
+                or ":" in path.parts[0]
+            ):
+                raise ValueError("Unsafe path")
+
+            if relative_path in seen_paths:
+                raise ValueError("Duplicate file paths")
+
+            seen_paths.add(relative_path)
+
+            if type(size) is not int or size < 0:
+                raise ValueError("Invalid file size")
+
+            if not isinstance(sha256, str) or not _HASH_RE.fullmatch(sha256):
+                raise ValueError("Invalid hash")
+
+            if not isinstance(raw_chunks, list):
+                raise ValueError("Invalid chunks list")
+
+            chunks = []
+            total_size = 0
+
+            for raw_chunk in raw_chunks:
+                if not isinstance(raw_chunks, dict):
+                    raise ValueError("Each chunk must be an object")
+
+                chunk_id = raw_chunk.get(id)
+                chunk_size_value = raw_chunk.get("size")
+
+                if not isinstance(chunk_id, str):
+                    pass
 
         return cls(
             format_version=version,
