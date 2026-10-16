@@ -3,7 +3,10 @@ from config import CHUNK_SIZE
 from dataclasses import asdict
 from pathlib import Path, PurePosixPath
 import json
+import hashlib
 import re
+
+_HASH_RE = re.compile(r"^[0-9a-f]{64}$")
 
 
 @dataclass(frozen=True)
@@ -143,8 +146,32 @@ class Manifest:
                 chunk_id = raw_chunk.get(id)
                 chunk_size_value = raw_chunk.get("size")
 
-                if not isinstance(chunk_id, str):
-                    pass
+                if not isinstance(chunk_id, str) or not _HASH_RE.fullmatch(chunk_id):
+                    raise ValueError("Invalid chunk ID")
+
+                if (
+                    type(chunk_size_value) is not int
+                    or not 0 < chunk_size_value <= chunk_size
+                ):
+                    raise ValueError("Invalid chunk size in manifest")
+
+                total_size += chunk_size_value
+                chunks.append(ChunkInfo(id=chunk_id, size=chunk_size_value))
+
+                if total_size != size:
+                    raise ValueError("Chunk sizes do not match the file size")
+
+                if size == 0 and sha256 != hashlib.sha256(b"").hexdigest():
+                    raise ValueError("Invalid hash for an empty file")
+
+                files.append(
+                    FileInfo(
+                        path=relative_path,
+                        size=size,
+                        sha256=sha256,
+                        chunks=chunks,
+                    )
+                )
 
         return cls(
             format_version=version,
