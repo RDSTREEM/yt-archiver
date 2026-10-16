@@ -19,3 +19,32 @@ def _read_verified_chunk(chunk_dir: Path, chunk_id: str, expected_size: int) -> 
         raise ValueError("Corrupted chunk")
 
     return data
+
+
+def verify_archive(archive: Path):
+    archive = archive.resolve()
+
+    manifest_path = archive / "manifest.json"
+    manifest = Manifest.load(manifest_path)
+
+    chunk_dir = archive / "chunks"
+
+    for entry in manifest.files:
+        file_hash = hashlib.sha256()
+        restored_size = 0
+
+        for chunk in entry.chunks:
+            data = _read_verified_chunk(
+                chunk_dir,
+                chunk.id,
+                chunk.size,
+            )
+
+            file_hash.update(data)
+            restored_size += len(data)
+
+        if restored_size != entry.size:
+            raise ValueError("Incorrect reconstructed size")
+
+        if file_hash.hexdigest() != entry.sha256:
+            raise ValueError("File checksum mismatch")
