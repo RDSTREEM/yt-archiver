@@ -1,5 +1,5 @@
 from pathlib import Path
-from config import CHUNK_SIZE
+from yt_archiver.config import CHUNK_SIZE
 from yt_archiver.manifest import Manifest, FileInfo, ChunkInfo
 from yt_archiver.chunker import chunk_stream
 import hashlib

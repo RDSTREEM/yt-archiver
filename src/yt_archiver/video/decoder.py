@@ -54,9 +54,9 @@ def decode_file(source: Path, destination: Path) -> None:
                     if raw[:8] != MAGIC:
                         raise ValueError("Invalid video signature")
 
-                    expected_size = struct.unpack("<Q", raw[8: HEADER_SIZE])[0]
+                    expected_size = struct.unpack("<Q", raw[8:HEADER_SIZE])[0]
 
-                    if expected_size > 2 ** 63 - 1:
+                    if expected_size > 2**63 - 1:
                         raise ValueError("Invalid payload size")
 
                     payload = raw[HEADER_SIZE:]
@@ -65,6 +65,38 @@ def decode_file(source: Path, destination: Path) -> None:
                 else:
                     payload = raw
 
-                remaining = expected_size - written
-                    
+                if expected_size is None:
+                    raise ValueError("Header not read properly")
 
+                remaining = expected_size - written
+
+                if remaining < 0:
+                    raise ValueError("video contains excess data")
+
+                payload = payload[:remaining]
+                output.write(payload)
+                written += len(payload)
+
+                if written == expected_size:
+                    break
+
+            if first:
+                raise ValueError("Video contains no frames")
+
+            if written != expected_size:
+                raise ValueError(
+                    f"Truncated video: expected {expected_size}"
+                    f"bytes, recovered {written}"
+                )
+
+    except Exception as e:
+        temp_path.unlink(missing_ok=True)
+
+    finally:
+        capture.release()
+
+    try:
+        temp_path.replace(destination)
+    except Exception as e:
+        temp_path.unlink(missing_ok=True)
+        raise
