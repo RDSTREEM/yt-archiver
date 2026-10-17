@@ -38,7 +38,7 @@ def pack_directory(source: Path, dest: Path, chunk_size: int = CHUNK_SIZE) -> Ma
     files: list[FileInfo] = []
 
     for path in paths:
-        relative_path = path.relative_to(source)
+        relative_path = path.relative_to(source).as_posix()
         file_hash = hashlib.sha256()
         file_size = 0
         chunks: list[ChunkInfo] = []

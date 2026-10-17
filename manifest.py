@@ -6,7 +6,7 @@ import json
 import hashlib
 import re
 
-_HASH_RE = re.compile(r"^[0-9a-f]{64}$")
+_HASH_RE = re.compile(r"^[0-9a-fA-F]{64}$")
 
 
 @dataclass(frozen=True)
@@ -54,23 +54,38 @@ class Manifest:
     files: list[FileInfo]
 
     def to_dict(self) -> dict:
-        return asdict(self)
+        return {
+            "format_version": self.format_version,
+            "chunk_size": self.chunk_size,
+            "files": [
+                {
+                    "path": file.path,
+                    "size": file.size,
+                    "sha256": file.sha256,
+                    "chunks": [
+                        {"id": chunk.id, "size": chunk.size} for chunk in file.chunks
+                    ],
+                }
+                for file in self.files
+            ],
+        }
 
     def save(self, path: Path) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
         temp_path = path.with_name(path.name + ".tmp")
 
         try:
-            with path.open("w", encoding="utf-8") as file:
+            with temp_path.open("w", encoding="utf-8") as file:
                 json.dump(
                     self.to_dict(),
                     file,
                     indent=4,
                     sort_keys=True,
                 )
+                file.write("\n")
+
             temp_path.replace(path)
 
-            file.write("\n")
         finally:
             temp_path.unlink(missing_ok=True)
 
@@ -140,13 +155,14 @@ class Manifest:
             total_size = 0
 
             for raw_chunk in raw_chunks:
-                if not isinstance(raw_chunks, dict):
+                if not isinstance(raw_chunk, dict):
                     raise ValueError("Each chunk must be an object")
 
-                chunk_id = raw_chunk.get(id)
+                chunk_id = raw_chunk.get("id")
                 chunk_size_value = raw_chunk.get("size")
 
                 if not isinstance(chunk_id, str) or not _HASH_RE.fullmatch(chunk_id):
+                    print(isinstance(chunk_id, str))
                     raise ValueError("Invalid chunk ID")
 
                 if (
@@ -158,23 +174,25 @@ class Manifest:
                 total_size += chunk_size_value
                 chunks.append(ChunkInfo(id=chunk_id, size=chunk_size_value))
 
-                if total_size != size:
-                    raise ValueError("Chunk sizes do not match the file size")
+            if total_size != size:
+                print(total_size, size)
+                raise ValueError("Chunk sizes do not match the file size")
 
-                if size == 0 and sha256 != hashlib.sha256(b"").hexdigest():
-                    raise ValueError("Invalid hash for an empty file")
+            if size == 0 and sha256 != hashlib.sha256(b"").hexdigest():
+                raise ValueError("Invalid hash for an empty file")
 
-                files.append(
-                    FileInfo(
-                        path=relative_path,
-                        size=size,
-                        sha256=sha256,
-                        chunks=chunks,
-                    )
+            files.append(
+                FileInfo(
+                    path=relative_path,
+                    size=size,
+                    sha256=sha256,
+                    chunks=chunks,
                 )
+            )
 
-        return cls(
+        manifest = cls(
             format_version=version,
             chunk_size=chunk_size,
-            files=raw_files,
+            files=files,
         )
+        return manifest

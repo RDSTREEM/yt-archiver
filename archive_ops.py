@@ -32,6 +32,7 @@ def verify_archive(archive: Path) -> Manifest:
     for entry in manifest.files:
         file_hash = hashlib.sha256()
         restored_size = 0
+        print(type(entry))
 
         for chunk in entry.chunks:
             data = _read_verified_chunk(
