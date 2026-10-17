@@ -17,7 +17,7 @@ class ChunkInfo:
 
 @dataclass(frozen=True)
 class FileInfo:
-    path: Path
+    path: str
     size: int
     sha256: str
     chunks: list[ChunkInfo]

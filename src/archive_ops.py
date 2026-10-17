@@ -21,7 +21,7 @@ def _read_verified_chunk(chunk_dir: Path, chunk_id: str, expected_size: int) -> 
     return data
 
 
-def verify_archive(archive: Path):
+def verify_archive(archive: Path) -> Manifest:
     archive = archive.resolve()
 
     manifest_path = archive / "manifest.json"
@@ -48,3 +48,57 @@ def verify_archive(archive: Path):
 
         if file_hash.hexdigest() != entry.sha256:
             raise ValueError("File checksum mismatch")
+
+    return manifest
+
+
+def restore_archive(
+    archive: Path,
+    destination: Path,
+) -> Manifest:
+    archive = archive.resolve()
+    destination = destination.resolve()
+
+    if destination == archive or archive in destination.parents:
+        raise ValueError("Restore destination can't be inside the archive")
+
+    if destination.exists():
+        if not destination.is_dir():
+            raise NotADirectoryError(destination)
+
+        if any(destination.iterdir()):
+            raise FileExistsError("Restore destination must be empty")
+
+    else:
+        destination.mkdir(parents=True)
+
+    manifest = verify_archive(archive)
+
+    for entry in manifest.files:
+        output_path = destination.joinpath(*entry.path.split("/"))
+
+        resolved_output = output_path.resolve()
+
+        if resolved_output == destination or destination not in resolved_output.parents:
+            raise ValueError("Unsafe restore path")
+
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+
+        file_hash = hashlib.sha256()
+
+        written_size = 0
+
+        with output_path.open("xb") as output:
+            for chunk in entry.chunks:
+                data = _read_verified_chunk(archive / "chunks", chunk.id, chunk.size)
+
+                output.write(data)
+                file_hash.update(data)
+
+                written_size += len(data)
+
+        if written_size != entry.size or file_hash.hexdigest() != entry.sha256:
+            output_path.unlink(missing_ok=True)
+            raise ValueError("Restored file failed verification")
+
+    return manifest
