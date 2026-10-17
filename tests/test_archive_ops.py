@@ -1,7 +1,7 @@
 import pytest
 
-from archive_ops import restore_archive, verify_archive
-from packer import pack_directory
+from yt_archiver.archive_ops import restore_archive, verify_archive
+from yt_archiver.packer import pack_directory
 
 
 def test_pack_verify_restore_roundtrip(tmp_path):

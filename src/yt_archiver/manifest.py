@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from config import CHUNK_SIZE
+from yt_archiver.config import CHUNK_SIZE
 from dataclasses import asdict
 from pathlib import Path, PurePosixPath
 import json

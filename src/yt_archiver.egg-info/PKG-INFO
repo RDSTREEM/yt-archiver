@@ -1,0 +1,12 @@
+Metadata-Version: 2.4
+Name: yt-archiver
+Version: 0.1.0
+Summary: An experimental video-based file archiver
+Requires-Python: >=3.11
+Provides-Extra: test
+Requires-Dist: pytest>=8; extra == "test"
+Provides-Extra: video
+Requires-Dist: numpy>=1.26; extra == "video"
+Requires-Dist: opencv-python>=4.9; extra == "video"
+Provides-Extra: ui
+Requires-Dist: streamlit>=1.40; extra == "ui"

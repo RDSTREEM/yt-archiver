@@ -3,8 +3,8 @@ from config import CHUNK_SIZE
 
 from pathlib import Path
 
-from packer import pack_directory
-from archive_ops import verify_archive, restore_archive
+from yt_archiver.macker import pack_directory
+from yt_archiver.archive_ops import verify_archive, restore_archive
 
 
 def handle_pack(args) -> None:

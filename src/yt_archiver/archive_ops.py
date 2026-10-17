@@ -1,7 +1,7 @@
 import hashlib
 from pathlib import Path
 
-from manifest import Manifest
+from yt_archiver.manifest import Manifest
 
 
 def _read_verified_chunk(chunk_dir: Path, chunk_id: str, expected_size: int) -> bytes:

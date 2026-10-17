@@ -1,0 +1,2 @@
+[console_scripts]
+yt-archiver = yt_archiver.cli:main
