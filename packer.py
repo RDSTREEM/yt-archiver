@@ -8,7 +8,7 @@ import hashlib
 def pack_directory(source: Path, dest: Path, chunk_size: int = CHUNK_SIZE) -> Manifest:
     source = source.resolve()
 
-    if source.is_dir():
+    if not source.is_dir():
         raise NotADirectoryError(source)
 
     if chunk_size <= 0:
