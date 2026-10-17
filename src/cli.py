@@ -1,8 +1,10 @@
 import argparse
+from config import CHUNK_SIZE
 
 from pathlib import Path
 
 from packer import pack_directory
+from archive_ops import verify_archive, restore_archive
 
 
 def handle_pack(args) -> None:
@@ -21,6 +23,23 @@ def handle_pack(args) -> None:
     print(f"Archive: {Path(args.dest).resolve()}")
 
 
+def handle_verify(args):
+    manifest = verify_archive(Path(args.archive))
+
+    print("Archive verification successful")
+    print(f"Files verified: {len(manifest.files)}")
+
+
+def handle_restore(args):
+    manifest = restore_archive(
+        Path(args.archive),
+        Path(args.dest),
+    )
+    print("Archived restored sucessfully")
+    print(f"Files restored: {len(manifest.files)}")
+    print(f"Destination: {Path(args.dest).resolve()}")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="the cli version of the main thingi ig idkk"
@@ -37,11 +56,25 @@ def main() -> None:
     pack_parser.add_argument(
         "--chunk-size",
         type=int,
-        default=1024 * 1024,
+        default=CHUNK_SIZE,
         help="Chunk size in bytes (default: 1 MiB)",
     )
 
     pack_parser.set_defaults(func=handle_pack)
+
+    verify_parser = commands.add_parser(
+        "verify", help="Verify an archive and its checksums"
+    )
+    verify_parser.add_argument("archive")
+    verify_parser.set_defaults(func=handle_verify)
+
+    restore_parser = commands.add_parser(
+        "restore", help="Restores files from a local archive"
+    )
+
+    restore_parser.add_argument("archive")
+    restore_parser.add_argument("--dest", required=True)
+    restore_parser.set_defaults(func=handle_restore)
 
     args = parser.parse_args()
 
