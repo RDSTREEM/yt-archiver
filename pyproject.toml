@@ -20,7 +20,7 @@ release = ["pyinstaller>=6.10"]
 [project.scripts]
 yt_archiver = "yt_archiver.cli:main"
 yt-archiver = "yt_archiver.cli:main"
-yt-archiver-gui = "yt_archiver.app:main"
+yt-archiver-gui = "yt_archiver.ui.app:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

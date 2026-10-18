@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QApplication, QMainWindow
+from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QLabel
 from PySide6.QtCore import QProcess
 import sys
 import pathlib
@@ -16,6 +16,25 @@ class ArchiverWindow(QMainWindow):
         self.process.readyReadStandardError.connect(self.read_stderr)
         self.process.finished.connect(self.process_finished)
         self.process.errorOccurred.connect(self.process_error)
+
+        self.source_folder = ""
+        self.backup_video = ""
+        self.restore_video = ""
+        self.restore_folder = ""
+
+        win = QWidget()
+        self.setCentralWidget(win)
+        layout = QVBoxLayout(win)
+        layout.setSpacing(18)
+
+        heading = QLabel("VD Archiver")
+        layout.addWidget(heading)
+
+        subtitle = QLabel(
+            "Create a video backup or restore files from an existing backup"
+        )
+        subtitle.setWordWrap(True)
+        layout.addWidget(subtitle)
 
     def read_stdout(self):
         pass

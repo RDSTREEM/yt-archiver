@@ -1,4 +1,4 @@
 [console_scripts]
 yt-archiver = yt_archiver.cli:main
-yt-archiver-gui = yt_archiver.app:main
+yt-archiver-gui = yt_archiver.ui.app:main
 yt_archiver = yt_archiver.cli:main
