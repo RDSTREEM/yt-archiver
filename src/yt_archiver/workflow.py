@@ -52,7 +52,11 @@ def restore_video(source: Path, destination: Path):
         raise ValueError("backup must be in mkv")
 
     if destination.exists():
-        raise FileExistsError(destination)
+        if not destination.is_dir():
+            raise NotADirectoryError(destination)
+
+        if any(destination.iterdir()):
+            raise FileExistsError("Restore place must be empty")
 
     if destination == source or source in destination.parents:
         raise ValueError("vid must be outside of the source")
