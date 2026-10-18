@@ -119,6 +119,15 @@ class ArchiverWindow(QMainWindow):
             )
             return
 
+        self.run_cli(
+            [
+                "archive",
+                self.source_folder,
+                "--dest",
+                self.backup_video,
+            ]
+        )
+
     def start_restore(self):
         if not self.restore_video or not self.restore_folder:
             QMessageBox.warning(
@@ -127,6 +136,15 @@ class ArchiverWindow(QMainWindow):
                 "Choose a backup video and destination folder first.",
             )
             return
+
+        self.run_cli(
+            [
+                "extract",
+                self.restore_video,
+                "--dest",
+                self.restore_folder,
+            ]
+        )
 
     def cli_commands(self, arguments: list[str]) -> tuple[str, list[str]]:
         if getattr(sys, "frozen", False):
@@ -152,9 +170,6 @@ class ArchiverWindow(QMainWindow):
         self.set_busy(True)
         self.status.setText("Working")
         self.process.start(program, cli_arguments)
-
-    def set_busy(self, b):
-        pass
 
     def choose_restore_video(self):
         path, _ = QFileDialog.getOpenFileName(
@@ -199,12 +214,12 @@ class ArchiverWindow(QMainWindow):
                 self.output_label.setText(self.backup_video)
 
     def read_stdout(self):
-        data = bytes(self.process.readAllStandardOutput())
+        data = bytes(self.process.readAllStandardOutput().data())
         if data:
             self.log.appendPlainText(data.decode("utf-8", errors="replace").rstrip())
 
     def read_stderr(self):
-        data = bytes(self.process.readAllStandardError())
+        data = bytes(self.process.readAllStandardError().data())
         if data:
             self.log.appendPlainText(
                 "ERROR: " + data.decode("utf-8", errors="replace").rstrip()
