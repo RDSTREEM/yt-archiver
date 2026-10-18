@@ -50,8 +50,8 @@ def encode_file(source: Path, destination: Path) -> None:
     try:
         with source.open("rb") as file:
             header = MAGIC + struct.pack("<Q", size)
-            first_capcity = FRAME_BYTES - HEADER_SIZE
-            payload = file.read(first_capcity)
+            first_capacity = FRAME_BYTES - HEADER_SIZE
+            payload = file.read(first_capacity)
 
             frame_data = header + payload
 
@@ -77,6 +77,9 @@ def encode_file(source: Path, destination: Path) -> None:
                         dtype=np.uint8,
                     ).reshape(HEIGHT, WIDTH, CHANNELS)
                 )
+    except Exception:
+        temp_path.unlink(missing_ok=True)
+        raise
     finally:
         writer.release()
 
@@ -88,4 +91,4 @@ def encode_file(source: Path, destination: Path) -> None:
         temp_path.replace(destination)
     except Exception as e:
         temp_path.unlink(missing_ok=True)
-        print(e)
+        raise

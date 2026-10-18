@@ -19,7 +19,7 @@ def decode_file(source: Path, destination: Path) -> None:
         raise FileNotFoundError(source)
 
     if destination.exists():
-        raise FileNotFoundError(destination)
+        raise FileExistsError(destination)
     destination.parent.mkdir(parents=True, exist_ok=True)
 
     capture = cv2.VideoCapture(str(source))
@@ -91,6 +91,7 @@ def decode_file(source: Path, destination: Path) -> None:
 
     except Exception as e:
         temp_path.unlink(missing_ok=True)
+        raise
 
     finally:
         capture.release()

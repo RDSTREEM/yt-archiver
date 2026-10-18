@@ -1,6 +1,4 @@
 from dataclasses import dataclass
-from yt_archiver.config import CHUNK_SIZE
-from dataclasses import asdict
 from pathlib import Path, PurePosixPath
 import json
 import hashlib
@@ -162,7 +160,6 @@ class Manifest:
                 chunk_size_value = raw_chunk.get("size")
 
                 if not isinstance(chunk_id, str) or not _HASH_RE.fullmatch(chunk_id):
-                    print(isinstance(chunk_id, str))
                     raise ValueError("Invalid chunk ID")
 
                 if (
@@ -175,7 +172,6 @@ class Manifest:
                 chunks.append(ChunkInfo(id=chunk_id, size=chunk_size_value))
 
             if total_size != size:
-                print(total_size, size)
                 raise ValueError("Chunk sizes do not match the file size")
 
             if size == 0 and sha256 != hashlib.sha256(b"").hexdigest():

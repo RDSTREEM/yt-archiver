@@ -32,7 +32,6 @@ def verify_archive(archive: Path) -> Manifest:
     for entry in manifest.files:
         file_hash = hashlib.sha256()
         restored_size = 0
-        print(type(entry))
 
         for chunk in entry.chunks:
             data = _read_verified_chunk(
@@ -63,6 +62,8 @@ def restore_archive(
     if destination == archive or archive in destination.parents:
         raise ValueError("Restore destination can't be inside the archive")
 
+    manifest = verify_archive(archive)
+
     if destination.exists():
         if not destination.is_dir():
             raise NotADirectoryError(destination)
@@ -72,8 +73,6 @@ def restore_archive(
 
     else:
         destination.mkdir(parents=True)
-
-    manifest = verify_archive(archive)
 
     for entry in manifest.files:
         output_path = destination.joinpath(*entry.path.split("/"))
