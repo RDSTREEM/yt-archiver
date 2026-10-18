@@ -1,1 +1,1 @@
-yt-archiver
+yt_archiver

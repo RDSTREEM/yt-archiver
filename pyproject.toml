@@ -17,7 +17,7 @@ dependencies = [
 test = ["pytest>=8"]
 
 [project.scripts]
-yt-archiver = "yt_archiver.cli:main"
+yt_archiver = "yt_archiver.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

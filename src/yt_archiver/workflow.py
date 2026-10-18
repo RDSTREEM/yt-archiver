@@ -42,6 +42,9 @@ def backup_directory(source: Path, destination: Path) -> Manifest:
 
 
 def restore_video(source: Path, destination: Path):
+    source = Path(source).resolve()
+    destination = Path(destination).resolve()
+
     if not source.is_file():
         raise FileNotFoundError(source)
 
