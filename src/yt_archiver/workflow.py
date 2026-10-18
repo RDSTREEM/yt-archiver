@@ -42,8 +42,8 @@ def backup_directory(source: Path, destination: Path) -> Manifest:
 
 
 def restore_video(source: Path, destination: Path):
-    if not source.is_dir():
-        raise NotADirectoryError(source)
+    if not source.is_file():
+        raise FileNotFoundError(source)
 
     if source.suffix.lower() != ".mkv":
         raise ValueError("backup must be in mkv")
