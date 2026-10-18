@@ -9,6 +9,7 @@ from PySide6.QtWidgets import (
     QPushButton,
     QFileDialog,
     QMessageBox,
+    QPlainTextEdit,
 )
 from PySide6.QtCore import QProcess
 import sys
@@ -99,6 +100,16 @@ class ArchiverWindow(QMainWindow):
 
         layout.addWidget(restore_group)
 
+        layout.addWidget(QLabel("Activity"))
+        self.log = QPlainTextEdit()
+        self.log.setReadOnly(True)
+        self.log.setPlaceholderText("Choose an operation to see its output here.")
+
+        layout.addWidget(self.log, 1)
+
+        self.status = QLabel("Ready")
+        layout.addWidget(self.status)
+
     def start_backup(self):
         if not self.source_folder or not self.backup_video:
             QMessageBox.warning(
@@ -117,7 +128,32 @@ class ArchiverWindow(QMainWindow):
             )
             return
 
-    def run_cli(self):
+    def cli_commands(self, arguments: list[str]) -> tuple[str, list[str]]:
+        if getattr(sys, "frozen", False):
+            executable_name = (
+                "yt-archiver.exe" if sys.platform == "win32" else "yt-archiver"
+            )
+
+            executable = Path(sys.executable).with_name(executable_name)
+
+            return str(executable), arguments
+
+        return sys.executable, ["-m", "yt_archiver.cli", *arguments]
+
+    def run_cli(self, arguments: list[str]):
+        if self.process.state() != QProcess.ProcessState.NotRunning:
+            return
+
+        program, cli_arguments = self.cli_commands(arguments)
+
+        self.log.clear()
+        self.log.appendPlainText(f"Running: {program} {' '.join(cli_arguments)}")
+
+        self.set_busy(True)
+        self.status.setText("Working")
+        self.process.start(program, cli_arguments)
+
+    def set_busy(self, b):
         pass
 
     def choose_restore_video(self):
@@ -163,16 +199,44 @@ class ArchiverWindow(QMainWindow):
                 self.output_label.setText(self.backup_video)
 
     def read_stdout(self):
-        pass
+        data = bytes(self.process.readAllStandardOutput())
+        if data:
+            self.log.appendPlainText(data.decode("utf-8", errors="replace").rstrip())
 
     def read_stderr(self):
-        pass
+        data = bytes(self.process.readAllStandardError())
+        if data:
+            self.log.appendPlainText(
+                "ERROR: " + data.decode("utf-8", errors="replace").rstrip()
+            )
 
-    def process_finished(self):
-        pass
+    def process_finished(self, exit_code, exit_status):
+        self.read_stdout()
+        self.read_stderr()
+        self.set_busy(False)
 
-    def process_error(self):
-        pass
+        if exit_status == QProcess.ExitStatus.NormalExit and exit_code == 0:
+            self.status.setText("Completed sucessfully.")
+
+        else:
+            self.status.setText(f"Failed (exit code {exit_code})")
+            QMessageBox.critical(
+                self,
+                "Operation Failed",
+                "The CLI operation failed. Check the activity log.",
+            )
+
+    def process_error(self, err):
+        if err == QProcess.ProcessError.FailedToStart:
+            self.set_busy(False)
+            self.status.setText("Could not start the CLI")
+            self.log.appendPlainText(
+                "\nCould not start the CLI. Check that it is installed or bundled beside the GUI"
+            )
+
+    def set_busy(self, busy: bool):
+        self.backup_button.setEnabled(not busy)
+        self.restore_button.setEnabled(not busy)
 
 
 def main():
