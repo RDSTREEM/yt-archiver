@@ -8,3 +8,5 @@ Requires-Dist: numpy>=1.26
 Requires-Dist: opencv-python>=4.9
 Provides-Extra: test
 Requires-Dist: pytest>=8; extra == "test"
+Provides-Extra: release
+Requires-Dist: pyinstaller>=6.10; extra == "release"

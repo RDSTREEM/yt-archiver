@@ -23,7 +23,7 @@ def handle_extract(args) -> None:
     manifest = restore_video(args.src, args.dest)
     total_bytes = sum(file.size for file in manifest.files)
     total_chunks = sum(len(file.chunks) for file in manifest.files)
-    print("Video created successfully.")
+    print("Video extractd successfully.")
     print(f"Files: {len(manifest.files)}")
     print(f"Total source bytes: {total_bytes}")
     print(f"Chunk references: {total_chunks}")
