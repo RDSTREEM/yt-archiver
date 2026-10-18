@@ -11,7 +11,7 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QPlainTextEdit,
 )
-from PySide6.QtCore import QProcess
+from PySide6.QtCore import QProcess, Qt
 import sys
 from pathlib import Path
 
@@ -20,7 +20,7 @@ class ArchiverWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle("Vid Archiver")
+        self.setWindowTitle("VD Archiver")
         self.resize(720, 620)
 
         self.process = QProcess(self)
@@ -37,14 +37,18 @@ class ArchiverWindow(QMainWindow):
         win = QWidget()
         self.setCentralWidget(win)
         layout = QVBoxLayout(win)
-        layout.setSpacing(18)
+        layout.setSpacing(14)
+        layout.setContentsMargins(28, 24, 28, 20)
 
         heading = QLabel("VD Archiver")
+        heading.setObjectName("heading")
+        heading.setStyleSheet("font-size: 28px; font-weight: bold;")
         layout.addWidget(heading)
 
         subtitle = QLabel(
             "Create a video backup or restore files from an existing backup"
         )
+        subtitle.setObjectName("subtitle")
         subtitle.setWordWrap(True)
         layout.addWidget(subtitle)
 
@@ -62,6 +66,8 @@ class ArchiverWindow(QMainWindow):
         output_button.clicked.connect(self.choose_backup_video)
 
         self.backup_button = QPushButton("Create video backup")
+        self.backup_button.setObjectName("primaryButton")
+        self.backup_button.setCursor(Qt.CursorShape.PointingHandCursor)
         self.backup_button.clicked.connect(self.start_backup)
 
         backup_layout.addWidget(QLabel("Source folder"), 0, 0)
@@ -89,6 +95,8 @@ class ArchiverWindow(QMainWindow):
 
         self.restore_button = QPushButton("Extract files")
         self.restore_button.clicked.connect(self.start_restore)
+        self.restore_button.setObjectName("primaryButton")
+        self.restore_button.setCursor(Qt.CursorShape.PointingHandCursor)
 
         restore_layout.addWidget(QLabel("Backup video"), 0, 0)
         restore_layout.addWidget(self.video_label, 0, 1)
@@ -104,10 +112,12 @@ class ArchiverWindow(QMainWindow):
         self.log = QPlainTextEdit()
         self.log.setReadOnly(True)
         self.log.setPlaceholderText("Choose an operation to see its output here.")
+        self.log.setObjectName("activityLog")
 
         layout.addWidget(self.log, 1)
 
         self.status = QLabel("Ready")
+        self.setObjectName("status")
         layout.addWidget(self.status)
 
     def start_backup(self):
@@ -256,6 +266,204 @@ class ArchiverWindow(QMainWindow):
 
 def main():
     app = QApplication(sys.argv)
+    app.setStyle("fusion")
+    # ! Credits to GPT for the UI design im not good at this kinda stuff
+    app.setStyleSheet("""/* ===== Main window ===== */
+    QMainWindow, QWidget {
+        background-color: #0B0F19;
+        color: #E2E8F0;
+        font-family: "Segoe UI";
+        font-size: 10pt;
+        selection-background-color: #7C5CFC;
+        selection-color: #FFFFFF;
+    }
+
+    /* ===== Header ===== */
+    QLabel#heading {
+        color: #F8FAFC;
+        font-size: 28px;
+        font-weight: 750;
+        padding-top: 4px;
+        padding-bottom: 2px;
+    }
+
+    QLabel#subtitle {
+        color: #8B95AA;
+        font-size: 10.5pt;
+        padding-bottom: 8px;
+    }
+
+    QLabel {
+        color: #C2CAD8;
+        background-color: transparent;
+    }
+
+    QLabel#status {
+        color: #A78BFA;
+        padding: 8px 2px;
+        font-weight: 600;
+        font-size: 9.5pt;
+    }
+
+    /* ===== Section panels ===== */
+    QGroupBox {
+        background-color: #131A29;
+        border: 1px solid #273249;
+        border-radius: 12px;
+        margin-top: 18px;
+        padding: 22px 16px 16px 16px;
+        font-size: 11pt;
+        font-weight: 650;
+    }
+
+    QGroupBox::title {
+        subcontrol-origin: margin;
+        subcontrol-position: top left;
+        left: 14px;
+        top: 0px;
+        padding: 0 8px;
+        color: #C4B5FD;
+        background-color: #131A29;
+    }
+
+    /* ===== Standard buttons ===== */
+    QPushButton {
+        background-color: #1C2537;
+        color: #E2E8F0;
+        border: 1px solid #34415A;
+        border-radius: 8px;
+        padding: 9px 14px;
+        font-weight: 600;
+    }
+
+    QPushButton:hover {
+        background-color: #28344B;
+        border-color: #6475A0;
+        color: #FFFFFF;
+    }
+
+    QPushButton:pressed {
+        background-color: #151D2D;
+        border-color: #7C5CFC;
+    }
+
+    QPushButton:focus {
+        border: 2px solid #A78BFA;
+    }
+
+    QPushButton:disabled {
+        background-color: #151C2A;
+        color: #68748A;
+        border-color: #252F42;
+    }
+
+    /* ===== Primary buttons ===== */
+    QPushButton#primaryButton {
+        background-color: #7C5CFC;
+        color: #FFFFFF;
+        border: 1px solid #7C5CFC;
+        border-radius: 9px;
+        padding: 12px 16px;
+        font-size: 10.5pt;
+        font-weight: 700;
+    }
+
+    QPushButton#primaryButton:hover {
+        background-color: #9078FF;
+        border-color: #9078FF;
+    }
+
+    QPushButton#primaryButton:pressed {
+        background-color: #6344DB;
+        border-color: #6344DB;
+    }
+
+    QPushButton#primaryButton:disabled {
+        background-color: #40366F;
+        color: #B6ACD9;
+        border-color: #40366F;
+    }
+
+    /* ===== Activity console ===== */
+    QPlainTextEdit#activityLog {
+        background-color: #080C14;
+        color: #A7F3D0;
+        border: 1px solid #263249;
+        border-radius: 10px;
+        padding: 12px;
+        selection-background-color: #6344DB;
+        selection-color: #FFFFFF;
+        font-family: "Consolas";
+        font-size: 9.5pt;
+    }
+
+    QPlainTextEdit#activityLog:focus {
+        border: 1px solid #7C5CFC;
+    }
+
+    /* ===== Scrollbars ===== */
+    QScrollBar:vertical {
+        background-color: transparent;
+        width: 10px;
+        margin: 3px 2px;
+        border: none;
+    }
+
+    QScrollBar::handle:vertical {
+        background-color: #34415A;
+        border-radius: 4px;
+        min-height: 28px;
+    }
+
+    QScrollBar::handle:vertical:hover {
+        background-color: #6475A0;
+    }
+
+    QScrollBar::add-line:vertical,
+    QScrollBar::sub-line:vertical {
+        height: 0px;
+        border: none;
+    }
+
+    QScrollBar:horizontal {
+        background-color: transparent;
+        height: 10px;
+        margin: 2px;
+        border: none;
+    }
+
+    QScrollBar::handle:horizontal {
+        background-color: #34415A;
+        border-radius: 4px;
+        min-width: 28px;
+    }
+
+    QScrollBar::handle:horizontal:hover {
+        background-color: #6475A0;
+    }
+
+    QScrollBar::add-line:horizontal,
+    QScrollBar::sub-line:horizontal {
+        width: 0px;
+        border: none;
+    }
+
+    /* ===== Tooltips ===== */
+    QToolTip {
+        background-color: #1C2537;
+        color: #F8FAFC;
+        border: 1px solid #475569;
+        border-radius: 5px;
+        padding: 6px 8px;
+    }
+
+    /* ===== Dialogs and file pickers ===== */
+    QMessageBox, QFileDialog {
+        background-color: #131A29;
+        color: #E2E8F0;
+    }
+""")
+
     window = ArchiverWindow()
     window.show()
     sys.exit(app.exec())
