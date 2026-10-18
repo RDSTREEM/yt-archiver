@@ -155,4 +155,3 @@ def extract_container(source: Path, destination: Path):
         return destination
     except Exception as e:
         shutil.rmtree(temp_dir, ignore_errors=True)
-        raise

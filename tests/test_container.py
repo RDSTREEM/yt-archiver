@@ -2,7 +2,8 @@ import zipfile
 
 import pytest
 
-from yt_archiver.container import create_container
+from yt_archiver.container import create_container, extract_container
+from yt_archiver.archive_ops import verify_archive
 from yt_archiver.packer import pack_directory
 
 
@@ -41,3 +42,29 @@ def test_container_does_not_overwrite(tmp_path):
         create_container(packed, output)
 
     assert output.read_bytes() == b"keep me"
+
+
+def test_extract_container_roundtrip(tmp_path):
+    source = tmp_path / "source"
+    source.mkdir()
+
+    (source / "hello.txt").write_text("hello world", encoding="utf-8")
+    (source / "copy.txt").write_text("hello world", encoding="utf-8")
+
+    (source / "empty.txt").write_bytes(b"")
+
+    packed = tmp_path / "packed"
+    pack_directory(source, packed)
+
+    output = tmp_path / "backup.yta"
+    create_container(packed, output)
+
+    extracted = tmp_path / "extracted"
+    result = extract_container(output, extracted)
+
+    assert result == extracted
+    assert (extracted / "manifest.json").is_file()
+    assert (extracted / "chunks").is_dir()
+
+    manifest = verify_archive(extracted)
+    assert len(manifest.files) == 3
