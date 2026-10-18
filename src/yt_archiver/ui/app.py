@@ -73,6 +73,32 @@ class ArchiverWindow(QMainWindow):
 
         layout.addWidget(backup_group)
 
+        restore_group = QGroupBox("Restore backup")
+        restore_layout = QGridLayout(restore_group)
+
+        self.video_label = QLabel("No backup video selected")
+        self.video_label.setWordWrap(True)
+        video_button = QPushButton("Choose video")
+        video_button.clicked.connect(self.choose_restore_video)
+
+        self.destination_label = QLabel("No destination folder selected")
+        self.destination_label.setWordWrap(True)
+        destination_button = QPushButton("Choose folder")
+        destination_button.clicked.connect(self.choose_restore_folder)
+
+        self.restore_button = QPushButton("Extract files")
+        self.restore_button.clicked.connect(self.start_restore)
+
+        restore_layout.addWidget(QLabel("Backup video"), 0, 0)
+        restore_layout.addWidget(self.video_label, 0, 1)
+        restore_layout.addWidget(video_button, 0, 2)
+        restore_layout.addWidget(QLabel("Destination"), 1, 0)
+        restore_layout.addWidget(self.destination_label, 1, 1)
+        restore_layout.addWidget(destination_button, 1, 2)
+        restore_layout.addWidget(self.restore_button, 2, 0, 1, 3)
+
+        layout.addWidget(restore_group)
+
     def start_backup(self):
         if not self.source_folder or not self.backup_video:
             QMessageBox.warning(
@@ -81,6 +107,36 @@ class ArchiverWindow(QMainWindow):
                 "Choose a source folder and an output video location first.",
             )
             return
+
+    def start_restore(self):
+        if not self.restore_video or not self.restore_folder:
+            QMessageBox.warning(
+                self,
+                "Missing Information",
+                "Choose a backup video and destination folder first.",
+            )
+            return
+
+    def run_cli(self):
+        pass
+
+    def choose_restore_video(self):
+        path, _ = QFileDialog.getOpenFileName(
+            self, "Choose backup video", "", "Matroska video (*mkv)"
+        )
+        if path:
+            self.restore_video = path
+            self.video_label.setText(path)
+
+            if not self.restore_folder:
+                self.restore_folder = str(Path(path).parent / "restored")
+                self.destination_label.setText(self.restore_folder)
+
+    def choose_restore_folder(self):
+        path = QFileDialog.getExistingDirectory(self, "Choose restore destination")
+        if path:
+            self.restore_folder = path
+            self.destination_label.setText(path)
 
     def choose_backup_video(self):
         path, _ = QFileDialog.getSaveFileName(
